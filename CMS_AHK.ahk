@@ -21,7 +21,7 @@ SetWorkingDir A_ScriptDir
 ; InstallKeybdHook 
 
 ; INCLUDES
-; #Include include\ScriptIsRunningTrayTip_AHKv2.ahk             ; Displays a tray tip on script start
+#Include include\ScriptIsRunningTrayTip_AHKv2.ahk             ; Displays a tray tip on script start
 #Include "include\Alt_menu_acceleration_DISABLER_AHKv2.ahk"
 
 ; Custom tray icon
@@ -427,6 +427,53 @@ Esc::
 ; # Ctrl+L -> <li>
 ^l::WrapWithAbbreviation('li')
 
+; ** Check the next character after the caret
+; ! Issue: Checking for next character doesn't work when caret is at the end of text (when no characters follow)
+CheckNextChar(wantedChar) {
+    SendInput "{LShift down}{Right}{Blind}{LShift up}^c{Left}"
+    if (!ClipWait(1))
+        return                  ;; Return if clipboard isn't filled within 1 second
+    sleep 10
+    nextChar := A_Clipboard
+
+    if (nextChar == wantedChar)
+        return true
+    
+    return false
+}
+
+; # Shift + ů (")
+; * Wrap selected text in quotation marks
+"::{
+    clipboardBackup := ClipboardAll()
+    selectedText := ""
+    A_Clipboard := ""           ;; Clear the clipboard
+
+    SendInput "^x"              ;; Ctrl + X (cut)
+    if (!ClipWait(1))
+        goto RestoreClipboard                  ;; Return if clipboard isn't filled within 1 second
+
+    ; * If text was NOT selected
+    if (!A_Clipboard) {
+
+        if (CheckNextChar('"')) {
+            SendInput "{Right}"
+        } else {
+            SendText '""'
+            SendInput "{Left}"
+        }
+    } 
+    else
+    {
+        selectedText := A_Clipboard
+        A_Clipboard := '"' . selectedText . '"'
+        NewPaste()
+    }
+
+    RestoreClipboard:
+    A_Clipboard := clipboardBackup      ; Restores clipboard
+    clipboardBackup := ""               ; Free the memory in case the clipboard was very large
+}
 
 ; # Ctrl+D and Shift+Alt+Down 
 ; * Duplicates line down
@@ -476,7 +523,7 @@ Esc::
     return
 }
 
-; # Ctrl+Shift+D and Shift+Alt+Up 
+; # Ctrl+Shift+D, Shift+Alt+Up 
 ; * Duplicates line up
 ^+d::
 +!Up::{
@@ -508,7 +555,7 @@ Esc::
     SendInput "^v"
 }
 
-; # Ctrl+ú
+; # Ctrl+ú => Shift+Tab
 ; * Unindent line
 ^ú::+Tab
 
@@ -516,8 +563,9 @@ Esc::
 ; * Indent line
 ^)::Tab
 
-; # Ctrl+- (Ctrl + minus)
+; # Ctrl+Shift+K, Ctrl+- (Ctrl + minus)
 ; * Deletes line
+^+k::
 ^NumpadSub::{
     SendInput "{End}{Shift down}{Home}{Home}{Shift up}{Backspace}{Backspace}"
 }
@@ -545,7 +593,6 @@ Esc::
 
 ; Auto-complete comment
 :*b0:<!--::-->{left 3}
-
 
 #HotIf WinActive("ahk_exe cmscg.exe") and ( WinActive("Kolekce stránek") or WinActive("Detail WWW stránky") or WinActive("Název stránky") or WinActive("Find") or WinActive("HZ (Změna tagů)") or WinActive("Definice hodnot typu tagů pro filtr") )
 ; # Ctrl+Backspace
