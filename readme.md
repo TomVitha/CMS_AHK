@@ -64,10 +64,9 @@ Tento skript rozšiřuje textový editor CMS o následující funkce:
 | `Ctrl+*` | Vložit CSS komentář |
 
 
-| Alt+W |
-|-------|
+#### Emmet Abbreviation 
 
-Napodobuje Emmet Abbreviation ve VSCode a umožňuje stejnou syntaxi pro vytváření elementů s třídami a ID (vlastní atributy nejsou podporovány).
+`Alt+W` napodobuje Emmet Abbreviation ve VSCode a umožňuje stejnou syntaxi pro vytváření elementů s třídami a ID (vlastní atributy nejsou podporovány).
 
 #### Syntaxe: `tag.třída#id`. 
 
