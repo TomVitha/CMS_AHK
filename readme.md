@@ -8,16 +8,17 @@ Tento script přidává Quality of Life  funkce a vylepšení pro CMS, spíše v
 
 ## Spouštění
 
+0. Pro fungování skriptu jsou potřeba i ostatní podpůrné složky soubory krom hlavního skriptu CMS_AHK.ahk, který by sám o sobě nefungoval.
 1. Otevři soubor `CMS_AHK.ahk`
 2. (Dobrovolné) Vlož zástupce na skript do složky po spuštění `%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup` pro automatické spuštění skriptu při zapnutí počítače 
 
 ## Funkce
 
-Tento skript rozšiřuje textový editor CMS o následující funkce:
 
 - Klávesové zkratky podobné jako ve VSCode
-- Vytváření elementů s třídami a ID jako pomocí Emmet
+- Vytváření elementů s třídami a ID jako pomocí Emmet Abbreviation
 - Manipulace s řádky
+- Automatické doplňování HTML tagů
 
 
 ## Klávesové zkratky
@@ -64,7 +65,7 @@ Tento skript rozšiřuje textový editor CMS o následující funkce:
 | `Ctrl+*` | Vložit CSS komentář |
 
 
-#### Emmet Abbreviation 
+### Emmet Abbreviation 
 
 `Alt+W` napodobuje Emmet Abbreviation ve VSCode a umožňuje stejnou syntaxi pro vytváření elementů s třídami a ID (vlastní atributy nejsou podporovány).
 
