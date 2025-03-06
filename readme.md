@@ -61,7 +61,7 @@ Tento script přidává Quality of Life  funkce a vylepšení pro CMS, spíše v
 | `Ctrl+I` | Obalit tagy `<i>` |
 | `Ctrl+P` | Obalit tagy `<p>` |
 | `Ctrl+L` | Obalit tagy `<li>` |
-| `Ctrl+B` | Generátor tagů |
+| `Ctrl+G` | Vypsání tagů obrázku z Úložiště |
 | `Ctrl+/` | HTML komentář |
 | `Ctrl+*` | CSS komentář |
 | `Ctrl+Shift+/` | JS komentář |
@@ -98,7 +98,7 @@ Skript obsahuje automatické doplňování HTML tagů:
 - Napsání otevíracího tagu `<tag>` automaticky doplní uzavírací `</tag>`
 - Napsání názvu tagu `tag` a zmáčknutí `Tab` automaticky doplní závorky a zavírací tag: `<tag></tag>`
 
-### Automatické vypsání tagů obrázku s Úložiště
+### Vypsání tagů obrázku z Úložiště
 
 V Úložišti zvol obrázek, zmáčkni kopírovat `Ctrl+C`, we WMS editoru zmáčkni `Ctrl+G` a do input boxu dej vložit `Ctrl+V`. Tagy budou automaticky vypsány včetně závorek `{{ }}` a _documentUrl_.
 
