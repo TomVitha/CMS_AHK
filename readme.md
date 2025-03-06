@@ -38,7 +38,6 @@ Tento script přidává Quality of Life  funkce a vylepšení pro CMS, spíše v
 | `Ctrl+V` | Nové vkládání (vloží mezi řádky) |
 | `Ctrl+Shift+V` | Původní chování vkládání (přepíše existující text) |
 | `Ctrl+Shift+Z` | Znovu (koresponduje `Ctrl+Y`) |
-| `Shift+ů` (aneb `Uvozovka`) | Obalí vybraný text uvozovkami |
 
 ### Operace s řádky
 
@@ -53,7 +52,7 @@ Tento script přidává Quality of Life  funkce a vylepšení pro CMS, spíše v
 | `Ctrl+)` | Zvětšit odsazení řádku (koresponduje `Tab`) |
 | `Ctrl+Backspace` | Smazat celé slovo (funguje i v jiných oknech než jen ve WMS editoru) |
 
-### Nástroje HTML/CSS
+### Nástroje HTML/CSS/JS
 
 | Zkratka | Popis |
 |----------|-------------|
@@ -62,8 +61,10 @@ Tento script přidává Quality of Life  funkce a vylepšení pro CMS, spíše v
 | `Ctrl+I` | Obalit tagy `<i>` |
 | `Ctrl+P` | Obalit tagy `<p>` |
 | `Ctrl+L` | Obalit tagy `<li>` |
-| `Ctrl+/` | Vložit HTML komentář |
-| `Ctrl+*` | Vložit CSS komentář |
+| `Ctrl+B` | Generátor tagů |
+| `Ctrl+/` | HTML komentář |
+| `Ctrl+*` | CSS komentář |
+| `Ctrl+Shift+/` | JS komentář |
 
 
 ### Emmet Abbreviation 
