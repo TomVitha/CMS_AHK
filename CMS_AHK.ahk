@@ -67,10 +67,10 @@ NewPaste() {
     ; CTRL+V
     SendInput "{Ctrl down}"
     SendInput "v"
-    SendInput "{Blind}{Ctrl Up}" ; {Blind} prevents CTRL from being stuck
+    SendInput "{Blind}{Ctrl Up}" ; {Blind} prevents CTRL from remaining "stuck"
 
-    ; ! WMS is too slow to create new lines and paste text, we need to wait (20ms per line)
-    Sleep (clipboardLines * 20)
+    ; ! WMS is too slow to create new lines and paste text - Time to wait in ms per line
+    Sleep (clipboardLines * 35)
 
     return
 }
@@ -293,118 +293,90 @@ Esc::
 ; # Ctrl+Shift+Z => Ctrl+Y
 ^+z::^y
 
-; # Ctrl+/
-;* HTML Comment
-^NumpadDiv::{
-    ;; I) MANUAL METHOD 
+
+CommentUncomment(commentType := "html") {
+    clipboardBackup := ClipboardAll()       ; Save current clipboard contents
+    A_Clipboard := ""                       ; Clear the clipboard
     
-    clipboardBackup := ClipboardAll()       ;; Save the current clipboard contents
-    A_Clipboard := ""                       ;; Clear the clipboard and send Ctrl+C to copy the selected text
-   
-    /*
-    SendInput "^c"                          ;; Ctrl + C (copy)
-    ClipWait(1)                             ;; Waits until the clipboard contains data. Will wait no longer than 1 second
-    selectedText := A_Clipboard             ;; Stores clipboard contents in a variable
-
-    clipboardLines := StrSplit(selectedText, "`n", "`r").length
-
-    ;; ? MULTI-LINE COMMENTING
-    if (clipboardLines > 1) {
-        ;; TODO: Implement multi-line commenting
-        ; MsgBox("Multi-line commenting not implemented yet.")
-        return
-    } 
-    */
-
-    ;; ? SINGLE-LINE COMMENTING
-    ;; Select the whole line
-    SendInput "{End}+{Home}"                ;; Same as "{End}{LShift down}{Home}{LShift up}"
-
-    ;; Doesn't work
-    ; SelectedText := EditGetSelectedText("WindowsForms10.Window.8.app.0.24f4a7c_r8_ad117", "ahk_class WindowsForms10.Window.8.app.0.24f4a7c_r8_ad1")
-    ; MsgBox(SelectedText)
-
-    SendInput "^c"                          ;; Ctrl + C (copy)
-    ClipWait(1)                             ;; Waits until the clipboard contains data for up to 1 second
-    selectedText := A_Clipboard             ;; Stores clipboard contents in variable
-
-    ;; If wrapped in comment tags
-    if (selectedText ~= "^<!--.*-->$")
-    {
-        unWrappedText := RegExReplace(selectedText, "^<!--(.*)-->$", "$1")
-        SendText unWrappedText
-        ; A_Clipboard := unWrappedText
-        ; NewPaste()
-    } else {
-        SendInput "{End}"
-        SendText "-->"
-        SendInput "{Home}"
-        SendText "<!--"
-    }
-
-
-
-    ;; II) CONTEXT MENU METHOD
-    /*
-    clipboardBackup := ClipboardAll()       ;; Save the current clipboard contents
-    A_Clipboard := ""                       ;; Clear the clipboard and send Ctrl+C to copy the selected text
-    SendInput "^c"                          ;; Ctrl + C (copy)
-    ClipWait(1)                             ;; Waits until the clipboard contains data. Will wait no longer than 1 second
-    selectedText := A_Clipboard             ;; Stores clipboard contents in a variable
-
-    isWrapped := false
-    
-
-    ;; Determine whether selectedText is already wrapped in comment tags
-    if (selectedText ~= "^<!--.*-->$")
-    {
-        isWrapped := true
-    }
-
-    CaretPosition := CaretGetPos(&CaretX, &CaretY)
-    CoordMode "Mouse", "Client"
-    CoordMode "Pixel", "Client"
-
-    ; Caret is not located within the selected text's bounding box -> we need to find it and click within it
-    ; Find pixel by color to click on selected line in +-5px range
-    if not PixelSearch(&Px, &Py, CaretX-5, CaretY-5, CaretX+5, CaretY+5, 0xe1e1ff, 0){
-        MsgBox("Pixel not found")
-        return
+    ; Set comment tags based on type  
+    if (commentType = "html") {
+        openingCommentTag := "<!--"
+        closingCommentTag := "-->"
+        commentPattern := "^<!--(.*)-->$"
+        hasClosingCommentTag := true
+    } else if (commentType = "css") {
+        openingCommentTag := "/*"
+        closingCommentTag := "*/"
+        commentPattern := "^/\*(.*)\*/$"
+        hasClosingCommentTag := true
+    } else if (commentType = "js") {
+        openingCommentTag := "//"
+        closingCommentTag := ""
+        commentPattern := "^//(.*)$"
+        hasClosingCommentTag := false
     }
         
-    Click Px, Py, "Right"   ; Open context menu; {AppsKey} doesn't work
-    sleep 50                ; Wait for the context menu to appear
+    ; Select the whole line
+    SendInput "{End}+{Home}"                ; Same as "{End}{LShift down}{Home}{LShift up}"
     
-    if not (isWrapped)
-    {
-        SendInput "{a}"         ; "Advanced"
-        sleep 60               ; Wait for the context menu to appear
-        SendInput "{c}"         ; "Comment selection"
-    } else {
-        SendInput "{a}"         ; "Advanced"
-        sleep 60                ; Wait for the context menu to appear
-        SendInput "{o}"         ; "Uncomment selection"
+    SendInput "^c"                          ; Ctrl + C (copy)
+    ClipWait(1)                             ; Wait up to 1 second for clipboard
+    selectedText := A_Clipboard             ; Store clipboard contents
+
+    ; Multiline (returns; not currently supported)
+    clipboardLines := StrSplit(selectedText, "`n", "`r").length
+    if (clipboardLines > 1) {
+        Goto End                            ; Cheeky goto
     }
-    */
-
-    ; Restores clipboard
-    A_Clipboard := clipboardBackup      ; Buggy
-    clipboardBackup := ""               ; Free the memory in case the clipboard was very large
-
+    
+    ; If wrapped in comment tags, remove them
+    if (selectedText ~= commentPattern) {
+        unWrappedText := RegExReplace(selectedText, commentPattern, "$1")
+        SendText unWrappedText
+    } else {
+        ; Not commented - add comment tags
+        if (hasClosingCommentTag) {
+            ; For HTML and CSS, wrap with opening and closing tags
+            SendInput "{End}"
+            SendText closingCommentTag
+            SendInput "{Home}"
+            SendText openingCommentTag
+            SendInput "{End}"
+        } else {
+            ; For JavaScript, just prepend the comment marker
+            SendInput "{End}"
+            SendInput "{Home}"
+            SendText openingCommentTag
+        }
+    }
+    
+    End:
+    A_Clipboard := clipboardBackup          ; Restore clipboard
+    clipboardBackup := ""                   ; Free memory
+    
     return
 }
 
-; # Ctrl+*
+; # Ctrl+/ (Numpad/)
+; * HTML Comment
+^NumpadDiv::{
+    CommentUncomment("html")
+}
+
+; # Ctrl+* (Numpad*)
 ; * CSS Comment
 ^NumpadMult::{
-    SendInput "{Home}"
-    SendText "/*"
-    SendInput "{End}"
-    SendText "*/"
+    CommentUncomment("css")
+}
+
+; # Ctrl+Shift+/ (Numpad/)
+; * JS Comment
+^+NumpadDiv::{
+    CommentUncomment("js")
 }
 
 ; # Alt + W
-; * Wrap with abbreviation (like in VSCode)
+; * Wrap with abbreviation (like Emmet Abbreviation in VSCode)
 !w::{
     abbr := InputBox("", "Zadejte zkratku", "w370 h70", "div")
     ; Cancel if cancel
@@ -430,49 +402,122 @@ Esc::
 ; ** Check the next character after the caret
 ; ! Issue: Checking for next character doesn't work when caret is at the end of text (when no characters follow)
 CheckNextChar(wantedChar) {
-    SendInput "{LShift down}{Right}{Blind}{LShift up}^c{Left}"
+    SendInput "{LShift down}{Right}{Blind}{LShift up}^c"
     if (!ClipWait(1))
         return                  ;; Return if clipboard isn't filled within 1 second
     sleep 10
     nextChar := A_Clipboard
 
-    if (nextChar == wantedChar)
+    if (nextChar == wantedChar) {
+        ; Next char is wanted char
+        SendInput "{Left}"
         return true
+    } else if (!nextChar) {
+        ; No next char
+        return false
+    } else {
+        ; Next char is different than wanted char
+        SendInput "{Left}"
+        return false
+    }
     
-    return false
 }
 
-; # Shift + ů (")
-; * Wrap selected text in quotation marks
-"::{
+; Wrap text in paired characters
+; ! Bug: Sometimes pastes previous clipboard contents instead of opening and closing characters
+WrapInPairedChars(openChar, closeChar := openChar) {
+
+    if !openChar
+        return
+
+    ; Store and clear clipboard
     clipboardBackup := ClipboardAll()
-    selectedText := ""
-    A_Clipboard := ""           ;; Clear the clipboard
+    A_Clipboard := ""           ; Clear the clipboard
 
-    SendInput "^x"              ;; Ctrl + X (cut)
+    SendInput "^x"              ; Ctrl + X (cut)
     if (!ClipWait(1))
-        goto RestoreClipboard                  ;; Return if clipboard isn't filled within 1 second
+        goto exit   ; Exit if clipboard isn't filled within 1s
 
-    ; * If text was NOT selected
-    if (!A_Clipboard) {
+    selectedText := A_Clipboard
 
-        if (CheckNextChar('"')) {
-            SendInput "{Right}"
-        } else {
-            SendText '""'
-            SendInput "{Left}"
-        }
-    } 
-    else
-    {
-        selectedText := A_Clipboard
-        A_Clipboard := '"' . selectedText . '"'
+    ; TODO: Implement multiline support
+    ; TODO: Implement check for following closing character (CheckNextChar(closeChar))
+
+    ; if(!selectedText and CheckNextChar(closeChar)){
+    ;     SendInput "{Right}"
+    ;     goto exit
+    ; }
+
+    clipboardLines := StrSplit(selectedText, "`n", "`r").length
+    if (clipboardLines > 1) {
+        SendText openChar
+        SendText closeChar
+        SendInput "{" "Left " StrLen(closeChar) "}"    ; Moves caret in between tags
+        SendInput "{Enter}{Enter}{Up}"
+        SendInput "{Tab}"                               ; Indent
         NewPaste()
+    } else {
+        A_Clipboard := openChar . selectedText . closeChar   ; Fill clipboard with wrapped text
+        NewPaste()
+        
     }
 
-    RestoreClipboard:
+    exit:
     A_Clipboard := clipboardBackup      ; Restores clipboard
     clipboardBackup := ""               ; Free the memory in case the clipboard was very large
+}
+
+; ! Wrapping temp disabled - it's a bitch if you don't want wrapping/autocomplete
+
+; ; # "
+; ; * Wrap selected text in quotation marks
+; "::{
+;     WrapInPairedChars('"')
+; }
+
+; ; # '
+; ; * Wrap selected text in single quotes
+; '::{
+;     WrapInPairedChars("'")
+; }
+
+; ; # (
+; ; * Wrap selected text in parentheses
+; (::{
+;     WrapInPairedChars("(", ")")
+; }
+
+; # CTRL+G
+; * Copy row in Uložiště, parse, get tags, format, paste tags
+^g::{
+
+    input := InputBox("Vložte řádek obrázku z úložiště", "Automatické vypsání tagů", "w370 h95")
+
+    if (input.Result = "Cancel")
+        return
+
+    if (!input.value)
+        return
+
+    ; Parse columns, get tags
+    tagsString := StrSplit(input.value , [A_Tab])[6]
+    ; Remove spaces (replace spaces with nothing)
+    tagsString := StrReplace(tagsString, A_Space)
+
+    if (!tagsString) {
+        MsgBox('Neobsahuje žádné tagy')
+        return
+    }
+
+    ; Parse Array into individual tags
+    ; tagsArray := StrSplit(tagsString , ";")
+    ; for index, tag in tagsArray{
+    ;     MsgBox(tag)
+    ; }
+
+    ; Replace ";" with spaces
+    output := '{{' . 'documentUrl ' . StrReplace(tagsString , ";", A_Space) . '}}'
+    SendText output
 }
 
 ; # Ctrl+D and Shift+Alt+Down 
@@ -591,8 +636,9 @@ CheckNextChar(wantedChar) {
 #Include "include\Hotstrings_HTML1.ahk"          ; Writing opening <tag> autocompletes closing </tag>
 #Include "include\Hotstrings_HTML2.ahk"         ; Plain tag name + tab -> opening + closing tag
 
-; Auto-complete comment
+; Auto-complete comments
 :*b0:<!--::-->{left 3}
+:*b0:/*::*/{left 2}
 
 #HotIf WinActive("ahk_exe cmscg.exe") and ( WinActive("Kolekce stránek") or WinActive("Detail WWW stránky") or WinActive("Název stránky") or WinActive("Find") or WinActive("HZ (Změna tagů)") or WinActive("Definice hodnot typu tagů pro filtr") )
 ; # Ctrl+Backspace
