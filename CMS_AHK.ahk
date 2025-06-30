@@ -41,17 +41,16 @@ FindSaveButton()
     WinGetPos &X, &Y, &W, &H, "A"   ; Gets window's position and size
 
     ; Looks for 'Uložit' or 'Vytvořit nový obsah' buttons
-    if (ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Ulozit.png") or ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Vytvorit-novy-obsah.png")) {
-        MouseClick "Left", OutputVarX, OutputVarY
-        CoordMode "Mouse", "Screen"
-        MouseMove startX, startY
-    }
-    else
-    {
+    if not (ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Ulozit.png") or ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Vytvorit-novy-obsah.png")) {
         TrayTip "Tlačítko Uložit nenalezeno"
         Sleep 2000   ; Displays for 2000ms
         TrayTip
+        return
     }
+    
+    MouseClick "Left", OutputVarX, OutputVarY
+    CoordMode "Mouse", "Screen"
+    MouseMove startX, startY
 }
 
 NewPaste() {
@@ -103,9 +102,7 @@ ParseAbbreviation(input) {
 WrapWithAbbreviation(input){
     ;; Save the current clipboard contents
     clipboardBackup := ClipboardAll()
-
     selectedText := ""
-
     ;; Clear the clipboard
     A_Clipboard := ""
 
@@ -159,10 +156,13 @@ WrapWithAbbreviation(input){
     ;         ; todo - picture with source and img inside
     ;     }
     case "source":
-        attributes := 'srcset="" media=""'
+        attributes := 'type="" src="" srcset="" sizes="" media=""'
         selfClosing := true
     case "time":
         attributes := 'datetime=""'
+    case "video":
+        attributes := 'poster="" loop muted disablePictureInPicture'
+        selfClosing := true
     default:
     }
 
@@ -243,7 +243,7 @@ WrapWithAbbreviation(input){
     }
 
     ; Restores clipboard
-    A_Clipboard := clipboardBackup      ; Buggy: Feels iffy
+    A_Clipboard := clipboardBackup
     clipboardBackup := ""               ; Free the memory in case the clipboard was very large
 
     return
@@ -259,6 +259,8 @@ WrapWithAbbreviation(input){
 ^s::{
     FindSaveButton()
 }
+
+; TODO: CTRL+Shift+S => Uložit nový obsah (pokud najde tlačítka "Uložit" a "Vytvořit nový obsah")
 
 ; # Escape, Ctrl+W
 ; * Gives option to save/discard changes or cancel
@@ -487,10 +489,9 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ;     WrapInPairedChars("(", ")")
 ; }
 
-; # CTRL+G
-; * Copy row in Uložiště, parse, get tags, format, paste tags
-^g::{
-
+; # CTRL+T
+; * Take copied row from Úložiště, parse, get tags, format, paste tags
+^t::{
     input := InputBox("Vložte řádek obrázku z úložiště", "Automatické vypsání tagů", "w370 h95")
 
     if (input.Result = "Cancel")
@@ -508,14 +509,22 @@ WrapInPairedChars(openChar, closeChar := openChar) {
         MsgBox('Neobsahuje žádné tagy')
         return
     }
-
-    ; Parse Array into individual tags
+    ; ! WRONG - JV cell from filename does not correspond to a tag -> JV still needs to be added manually as a tag
+    /*
+    tagJV := StrSplit(input.value , [A_Tab])[3]
+    ; If JV specified (cell is not just whitespace and contains letters)
+    if (RegExMatch(tagJV, "\S") && RegExMatch(tagJV, "[A-Za-z]")) {
+        tagsString := tagsString . ';JV=' . tagJV           ; Append JV to the tags
+    }
+    */
+   
+    ; Parse tags array into individual tags
     ; tagsArray := StrSplit(tagsString , ";")
     ; for index, tag in tagsArray{
     ;     MsgBox(tag)
     ; }
 
-    ; Replace ";" with spaces
+    ; Replace separators ";" (semicolons) with " " (spaces)
     output := '{{' . 'documentUrl ' . StrReplace(tagsString , ";", A_Space) . '}}'
     SendText output
 }
@@ -532,7 +541,7 @@ WrapInPairedChars(openChar, closeChar := openChar) {
     SendInput "^c"                      ;; Ctrl + C (copy)
     ClipWait 0.5                        ;; Waits until the clipboard contains data up to given number of seconds
 
-    ; * If clipboard not empty AKA If text was selected
+    ; * If clipboard not empty / If text was selected
     if (A_Clipboard)
         selectedText := A_Clipboard
 
@@ -612,7 +621,7 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ; * Deletes line
 ^+k::
 ^NumpadSub::{
-    SendInput "{End}{Shift down}{Home}{Home}{Shift up}{Backspace}{Backspace}"
+    SendInput "{End}{Shift down}{Home}{Home}{Shift up}{Del}{Del}"
 }
 
 ; # Ctrl+Tab, Ctrl+Shift+Tab
@@ -628,19 +637,60 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ; # Ctrl + PageDown => Arrow Down
 ^PgDn::Down
 
+; WIP
+; # Ctrl + Enter
+; * Create new line with indent
+^Enter::{
+    SendInput "{Enter 2}{Up 2}"
+    SendInput "+{End}"                              ; Select whole line
+    
+    SendInput "^c"                                  ; Ctrl + C (copy)
+    ClipWait
+    Sleep 30
+
+    SendInput "{End}{Home 2}"                       ; Move caret to the beginning of the line (consistent method)
+
+    indent := ""
+    if RegExMatch(A_Clipboard, "^(\s*)", &match) 
+        indent := match[1]                          ; Store captured whitespace
+
+    if (StrLen(indent) = 0) {
+        SendInput "{Down}{Tab}"
+    } else {
+        A_Clipboard := indent
+        SendInput "{Down 2}"
+        SendInput "^v" ; Ctrl + V (paste)
+        Sleep 25
+        SendInput "{Up}{Home}"
+        SendInput "{Tab}"                           ; Tab (indent)
+        SendInput "^v" ; Ctrl + V (paste)
+        Sleep 25
+    }
+}
+
+; # Ctrl + Shift + R
+; * Resize and center editor window
+^+r::{
+    windowWidth := 1800
+    windowHeight := 1150
+    ; WinMove [X, Y, Width, Height, WinTitle, WinText, ExcludeTitle, ExcludeText]
+    WinMove((A_ScreenWidth/2)-(windowWidth/2), (A_ScreenHeight/2)-(windowHeight/2), windowWidth, windowHeight)
+}
+
 
 ; # HOTSTRING
 
-; ! Hotstrings_HTML1 must be above 2 to avoid conflicts
+; ! Hotstrings_HTML1 must be above Hotstrings_HTML2 to avoid conflicts
 ; Todo: include attributes in selected elements (eg <a href="...">)
-#Include "include\Hotstrings_HTML1.ahk"          ; Writing opening <tag> autocompletes closing </tag>
+#Include "include\Hotstrings_HTML1.ahk"         ; Writing opening <tag> autocompletes closing </tag>
 #Include "include\Hotstrings_HTML2.ahk"         ; Plain tag name + tab -> opening + closing tag
 
 ; Auto-complete comments
 :*b0:<!--::-->{left 3}
 :*b0:/*::*/{left 2}
 
-#HotIf WinActive("ahk_exe cmscg.exe") and ( WinActive("Kolekce stránek") or WinActive("Detail WWW stránky") or WinActive("Název stránky") or WinActive("Find") or WinActive("HZ (Změna tagů)") or WinActive("Definice hodnot typu tagů pro filtr") )
+#HotIf WinActive("ahk_exe cmscg.exe") and ( WinActive("Kolekce stránek") or WinActive("Detail WWW stránky") or WinActive("Název stránky") or WinActive("Find") or WinActive("HZ (Změna tagů)") or WinActive("Definice hodnot typu tagů pro filtr") or WinActive("Detail položky menu") )
+
 ; # Ctrl+Backspace
 ^Backspace::{
     SendInput "^+{Left}{Backspace}"
