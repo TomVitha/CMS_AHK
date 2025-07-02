@@ -13,10 +13,10 @@
 ;    $ = Only necessary if the script uses the Send command to send the keys that comprise the hotkey itself, which might otherwise cause it to trigger itself.
 
 
-#Warn                       ;; Enables every type of warning and shows each warning in a message box.
+#Warn                       ; Enables every type of warning and shows each warning in a message box.
 SendMode "Input"
 SetWorkingDir A_ScriptDir
-;#Include A_ScriptDir       ;; Changes the working directory for subsequent #Includes and FileInstalls.
+;#Include A_ScriptDir       ; Changes the working directory for subsequent #Includes and FileInstalls.
 #SingleInstance force
 ; InstallKeybdHook 
 
@@ -41,7 +41,7 @@ FindSaveButton()
     WinGetPos &X, &Y, &W, &H, "A"   ; Gets window's position and size
 
     ; Looks for 'Uložit' or 'Vytvořit nový obsah' buttons
-    if not (ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Ulozit.png") or ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS_Vytvorit-novy-obsah.png")) {
+    if not (ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS-Ulozit.png") or ImageSearch(&OutputVarX, &OutputVarY, 0, 0, W, H, "support_media/CMS-Vytvorit_novy_obsah.png")) {
         TrayTip "Tlačítko Uložit nenalezeno"
         Sleep 2000   ; Displays for 2000ms
         TrayTip
@@ -100,14 +100,14 @@ ParseAbbreviation(input) {
 }
 
 WrapWithAbbreviation(input){
-    ;; Save the current clipboard contents
+    ; Save the current clipboard contents
     clipboardBackup := ClipboardAll()
     selectedText := ""
-    ;; Clear the clipboard
+    ; Clear the clipboard
     A_Clipboard := ""
 
-    SendInput "^c"              ;; Ctrl + C (copy)
-    ClipWait 0.25               ;; Waits until the clipboard contains data; Will wait no longer than 0.25 second
+    SendInput "^c"              ; Ctrl + C (copy)
+    ClipWait 0.25               ; Waits until the clipboard contains data; Will wait no longer than 0.25 second
 
     ; * If clipboard not empty / If text was selected
     if (A_Clipboard) {
@@ -215,7 +215,7 @@ WrapWithAbbreviation(input){
 
 
     ; ? Closing Tag Construction
-    ;; Construct closing tag if not self-closing
+    ; Construct closing tag if not self-closing
     closingTag := ""
     if (!selfClosing) {
         closingTag := '</' . parsed.tag . '>'
@@ -273,10 +273,10 @@ Esc::
         FindSaveButton()
     }
     else if (Okno = "No") {
-        SendInput "{Esc}"   ;;Esc closes the windows
+        SendInput "{Esc}"   ;Esc closes the windows
     }
     else {
-        ;MsgBox ("cancel")  ;; Does nothing
+        ;MsgBox ("cancel")  ; Does nothing
     }
 
 }
@@ -406,7 +406,7 @@ CommentUncomment(commentType := "html") {
 CheckNextChar(wantedChar) {
     SendInput "{LShift down}{Right}{Blind}{LShift up}^c"
     if (!ClipWait(1))
-        return                  ;; Return if clipboard isn't filled within 1 second
+        return                  ; Return if clipboard isn't filled within 1 second
     sleep 10
     nextChar := A_Clipboard
 
@@ -534,12 +534,12 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ^d::
 +!Down::{
 
-    clipboardBackup := ClipboardAll()   ;; Save the current clipboard contents
-    A_Clipboard := ""                   ;; Clear the clipboard
+    clipboardBackup := ClipboardAll()   ; Save the current clipboard contents
+    A_Clipboard := ""                   ; Clear the clipboard
     selectedText := ""
 
-    SendInput "^c"                      ;; Ctrl + C (copy)
-    ClipWait 0.5                        ;; Waits until the clipboard contains data up to given number of seconds
+    SendInput "^c"                      ; Ctrl + C (copy)
+    ClipWait 0.5                        ; Waits until the clipboard contains data up to given number of seconds
 
     ; * If clipboard not empty / If text was selected
     if (A_Clipboard)
@@ -550,8 +550,8 @@ WrapInPairedChars(openChar, closeChar := openChar) {
     if (clipboardLines > 1) {
         ; TODO: Add multiline support
         /*
-        SendInput "^x"                      ;; Ctrl + X (cut)
-        ClipWait 1                        ;; Waits until the clipboard contains data up to given seconds
+        SendInput "^x"                      ; Ctrl + X (cut)
+        ClipWait 1                        ; Waits until the clipboard contains data up to given seconds
         NewPaste()
         SendInput "{Enter}"
         NewPaste()
@@ -560,7 +560,7 @@ WrapInPairedChars(openChar, closeChar := openChar) {
     } else {
         SendInput "{End}{LShift down}{Home}{Home}{LShift up}"
         SendInput "^c"
-        ClipWait 1                  ;; Waits until the clipboard contains data; Will wait no longer than 1 second
+        ClipWait 1                  ; Waits until the clipboard contains data; Will wait no longer than 1 second
         SendInput "{End}{Enter}"
         ; SendInput "^v"
         NewPaste()
@@ -642,17 +642,17 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ; * Create new line with indent
 ^Enter::{
     SendInput "{Enter 2}{Up 2}"
-    SendInput "+{End}"                              ; Select whole line
+    SendInput "+{End}"                                          ; Select whole line
     
-    SendInput "^c"                                  ; Ctrl + C (copy)
+    SendInput "^c"                                              ; Ctrl + C (copy)
     ClipWait
     Sleep 30
 
-    SendInput "{End}{Home 2}"                       ; Move caret to the beginning of the line (consistent method)
+    SendInput "{End}{Home 2}"                                   ; Move caret to the beginning of the line (consistent method)
 
     indent := ""
     if RegExMatch(A_Clipboard, "^(\s*)", &match) 
-        indent := match[1]                          ; Store captured whitespace
+        indent := match[1]                                      ; Store captured whitespace
 
     if (StrLen(indent) = 0) {
         SendInput "{Down}{Tab}"
@@ -662,7 +662,7 @@ WrapInPairedChars(openChar, closeChar := openChar) {
         SendInput "^v" ; Ctrl + V (paste)
         Sleep 25
         SendInput "{Up}{Home}"
-        SendInput "{Tab}"                           ; Tab (indent)
+        SendInput "{Tab}"                                       ; Tab (indent)
         SendInput "^v" ; Ctrl + V (paste)
         Sleep 25
     }
@@ -677,13 +677,12 @@ WrapInPairedChars(openChar, closeChar := openChar) {
     WinMove((A_ScreenWidth/2)-(windowWidth/2), (A_ScreenHeight/2)-(windowHeight/2), windowWidth, windowHeight)
 }
 
-
 ; # HOTSTRING
 
 ; ! Hotstrings_HTML1 must be above Hotstrings_HTML2 to avoid conflicts
 ; Todo: include attributes in selected elements (eg <a href="...">)
-#Include "include\Hotstrings_HTML1.ahk"         ; Writing opening <tag> autocompletes closing </tag>
-#Include "include\Hotstrings_HTML2.ahk"         ; Plain tag name + tab -> opening + closing tag
+#Include "include\Hotstrings_HTML1.ahk"                         ; Writing opening <tag> autocompletes closing </tag>
+#Include "include\Hotstrings_HTML2.ahk"                         ; Plain tag name + tab -> opening + closing tag
 
 ; Auto-complete comments
 :*b0:<!--::-->{left 3}
@@ -695,6 +694,170 @@ WrapInPairedChars(openChar, closeChar := openChar) {
 ^Backspace::{
     SendInput "^+{Left}{Backspace}"
 }
+
+; NOTE: Version hard-coded, needs to be updated
+; TODO: Make WinTitle dynamic
+#HotIf WinActive("ahk_exe cmscg.exe") or WinActive("CMS CG v6.5.55.0 - [Správa obrázků]")
+
+; # CTRL + ALT + 1
+; * Imports all files in folder
+^!Numpad1:: {
+    CoordMode "Mouse", "Client"
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"
+
+    ; Looking for yellow background behind list items
+    if not (PixelSearch(&Px, &Py, 0, 0, WinW, WinH, 0xfafad2, 0)) {
+        MsgBox "Color not found."
+        return
+    }
+    
+    Click Px, Py                                                ; Clicks on yellow background, setting focus
+    SendInput "^a"                                              ; Ctrl + A (select all) 
+    Sleep 500                                                   ; Waits for selection to be made
+    SendInput "^i"                                              ; Ctrl + I (import)
+
+    ;; Expects "overwrite existing files" dialog to appear
+    if not (WinWaitActive("Zpráva", , 3)) {
+        MsgBox "Import warning dialog not found."
+        return
+    }
+    SendInput "{Enter}"
+
+    ;; Expects "Import kolekcí" window to appear
+    if not (WinWaitActive("Import kolekcí, soubory dané kolekce budou importovany s souladu definovaných pravidel.", , 10)) {
+        MsgBox "Import options window not found."
+        return
+    }
+
+    WinMaximize "Import kolekcí, soubory dané kolekce budou importovany s souladu definovaných pravidel."
+    Sleep 300                                                   ; Waits for window to maximize
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"                   ; Gets window's position and size
+
+    ;; Finds "Zobrazit" column heading
+    if not (ImageSearch(&ZobX, &ZobY, 0, 0, WinW, WinH, "support_media/CMS-Zobrazit.png")) {
+        MsgBox "Zobrazit column heading not found."
+        return
+    }
+
+    ;; Find first checkbox (unchecked, on the first, already active, row) in rough expected area
+    if not (ImageSearch(&ChckX, &ChckY, ZobX-7, ZobY, ZobX+90, ZobY+50, "support_media/CMS-checkbox-unchecked-on_active_row.png")) {
+        MsgBox "Checkbox not found."
+        return
+    }
+    MouseMove ChckX+7, ChckY+7                                  ; Move over checkbox (first row)
+    MouseGetPos &CurX, &CurY                                    ; Save cursor position
+
+    ; Loop over all other checkboxes and click them
+    while (PixelGetColor(curX, curY) = "0xF3F3F3") or (PixelGetColor(curX, curY) = "0xEAEAEA") {
+        Click
+        MouseMove 0, 22, 0, "R"                                 ; Moves cursor down by 22px (by line height)
+        MouseGetPos &CurX, &CurY                                ; Update cursor position
+    }
+
+    ;; NOTE: We can't simply loop over them, as the are not listed in alphabetical, or seemingly any other logical order, and the sorting cannot be changed, 'cause otherwise this all would have been too easy
+
+    SendInput "^a"
+    SendInput "^c"
+    ClipWait 1
+    Click ChckX+110, ChckY+10                                   ; First "zobrazit" cell
+    Sleep 100
+    
+    rows := StrSplit(A_Clipboard, "`n", "`r")
+    rows.RemoveAt(1)                                            ; Removes table header
+    for (row in rows) {
+        systomvyNazev := StrSplit(row, [A_Tab])[4]              ; Not my typo
+        nazevParts := StrSplit(systomvyNazev, "-")
+        n := nazevParts[nazevParts.length]
+        SendText n
+        SendInput "{Down}"
+        Sleep 150
+    }
+
+    ControlClick "WindowsForms10.BUTTON.app.0.1f1128c_r8_ad11"  ; "Check In" button
+}
+
+; # CTRL + ALT + 2
+; * Tags all files with "byt"
+^!Numpad2:: {
+    CoordMode "Mouse", "Client"
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"
+
+    ; Looking for yellow background behind list items
+    if not (PixelSearch(&Px, &Py, 0, 0, WinW, WinH, 0xfafad2, 0)) {
+        MsgBox "Color not found."
+        return
+    }
+
+    Click Px, Py                                                ; Clicks on yellow background, setting focus
+    SendInput "^a"                                              ; Ctrl + A (select all) 
+    Sleep 500                                                   ; Waits for selection to be made
+    SendInput "^h"                                              ; Ctrl + A (select all) 
+
+    if not (WinWaitActive("HZ (Změna tagů)", , 3)) {
+        MsgBox "Změna tagů window not found."
+        return
+    }
+
+    CoordMode "Mouse", "Client"
+    CoordMode "Pixel", "Client"
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"
+
+    ControlFocus "WindowsForms10.EDIT.app.0.1f1128c_r8_ad11"
+    SendText "byt"
+    Sleep 200
+    Click 510, 114                                              ; "Přidat" checkbox
+    Click "Left", 570, 114, 2                                   ; "Hodnoty k přidání" cell (double-click)
+
+    if not (WinWaitActive("Definice hodnot typu tagů pro filtr", , 3)) {
+        MsgBox "Window not found."
+        return
+    }
+    Sleep 200                                                   ; Waits for window to open
+    ControlFocus "WindowsForms10.EDIT.app.0.1f1128c_r8_ad14"    ; "Maska přejmenování" text input
+    Sleep 100
+    SendText "[N1-10]"
+    Sleep 100
+    ControlClick "WindowsForms10.BUTTON.app.0.1f1128c_r8_ad16"  ; "OK" Button
+
+    WinWaitActive("HZ (Změna tagů)", , 3)
+    ControlClick "WindowsForms10.BUTTON.app.0.1f1128c_r8_ad12"  ; "OK" button
+}
+
+; # CTRL + ALT + 3
+; * Tags all files with "ukazka"
+^!Numpad3:: {
+    CoordMode "Mouse", "Client"
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"
+
+    ; Looking for yellow background behind list items
+    if not (PixelSearch(&Px, &Py, 0, 0, WinW, WinH, 0xfafad2, 0)) {
+        MsgBox "Color not found."
+        return
+    }
+
+    Click Px, Py                                                ; Clicks on yellow background, setting focus
+    SendInput "^a"                                              ; Ctrl + A (select all) 
+    Sleep 500                                                   ; Waits for selection to be made
+    SendInput "^h"                                              ; Ctrl + H 
+
+    if not (WinWaitActive("HZ (Změna tagů)", , 3)) {
+        MsgBox "Změna tagů window not found."
+        return
+    }
+
+    CoordMode "Mouse", "Client"
+    CoordMode "Pixel", "Client"
+    WinGetPos &WinX, &WinY, &WinW, &WinH, "A"
+
+    ControlFocus "WindowsForms10.EDIT.app.0.1f1128c_r8_ad11"    ; "Název tagu" search input
+    SendText "ukazka"
+    Sleep 200
+    Click 510, 114                                              ; "Přidat" checkbox
+    Sleep 100
+    ControlClick "WindowsForms10.BUTTON.app.0.1f1128c_r8_ad12"  ; "OK" button
+}
+
+
 
 #HotIf
 
